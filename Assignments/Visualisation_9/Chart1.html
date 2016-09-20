@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>QB's - No Restriction</title>
+
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/colorbrewer.v1.min.js"></script>
+	
+	<style>
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		  shape-rendering: crispEdges;
+		}
+		.dot {
+		  stroke: #000;
+		}
+		.tooltip {
+		  position: absolute;
+		  width: 200px;
+		  height: 28px;
+		  pointer-events: none;
+		}
+	</style>
+	
+  </head>
+  
+  <body>
+		
+
+  <div id="BigFIve" style = "display : none">1</div>
+  <div id="GroupOfFive" style = "display : none">1</div>
+  <div id="Independent" style = "display : none">1</div>
+  
+  <h2>Selection and Highlighting</h2>
+  
+  <p>Explanation : At the beginning chart gets displayed using an animation. Here we are allowing user's to be able to select and view the group (BigFive, GroupOfFive, Independent) that they want to know about. User's will be able to select more than one group. Initially data of all the groups will be displayed. So all the groups will be highlighted. So first user's have to deselect the groups that they dont want. User's need to click on legend in order to select/deselect the group. Whenever they click on the legend, its opacity will be increased/decreased indicating that user has selected/deselected that group to view.  </p>
+
+		
+	
+	
+	<script>
+		var margin = {top: 20, right: 20, bottom: 30, left: 30},
+			width = 960 - margin.left - margin.right,
+			height = 500 - margin.top - margin.bottom;
+		// Setup x 
+		var xValue = function(d) { return d["Rushing TD"];}, // data -> value
+			xScale = d3.scale.linear().range([0, width]), // value -> display
+			xMap = function(d) { return xScale(xValue(d));}, // data -> display
+			xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+		// Setup y
+		var yValue = function(d) { return d["Passing TD"];}, // data -> value
+			yScale = d3.scale.linear().range([height, 0]), // value -> display
+			yMap = function(d) { return yScale(yValue(d));}, // data -> display
+			yAxis = d3.svg.axis().scale(yScale).orient("left");
+		// Setup fill color
+		var cValue = function(d) { return d.Group;},
+			color = d3.scale.ordinal().range(colorbrewer.Set1[3]);
+		// Add the graph canvas to the body of the webpage
+		var svg = d3.select("body").append("svg")
+						.attr("width", width + margin.left + margin.right)
+						.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		// Add the tooltip area to the webpage
+		var tooltip = d3.select("body").append("div")
+							.attr("class", "tooltip")
+							.style("opacity", 0);
+		// load data
+		d3.csv("passing-stats-2014.csv", function(error, data) {
+			// Change string from CSV into number format
+			data.forEach(function(d) {
+				d["Passing TD"] = +d["Passing TD"];
+				d["Rushing TD"] = +d["Rushing TD"];
+			});
+			// Add buffer to data domain so dots won't overlap axis
+			xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+			yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+			// Create x-axis
+			svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis)
+				.append("text")
+					.attr("class", "label")
+					.attr("x", width)
+					.attr("y", -6)
+					.style("text-anchor", "end")
+					.text("Rushing TDs");
+			// Create y-axis
+			svg.append("g")
+					.attr("class", "y axis")
+					.call(yAxis)
+				.append("text")
+					.attr("class", "label")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 6)
+					.attr("dy", ".71em")
+					.style("text-anchor", "end")
+					.text("Passing TDs");
+			// Draw dots
+			scat = svg.selectAll(".dot")
+					  .data(data)
+					  .enter().append("circle")
+					  .attr("class", "dot")
+					  .attr("r", 0)
+					  .attr("cx", xMap)
+					  .attr("cy", height)
+					  .style("opacity", 1);
+	  
+			scat.transition()
+				.duration(1000)
+				.attr("r", 3.5)
+				.attr("cy", yMap)
+				.style("fill", function(d) { return color(cValue(d));})
+				;
+				
+							
+			scat.on("mouseover", function(d) {
+					tooltip.transition()
+							.duration(200)
+							.style("opacity", .9);
+					tooltip.html(d["Player"] + "<br/> " + d.School + "<br/> " + d.Conf + "<br/>(" + xValue(d) 	//Hover information
+									+ ", " + yValue(d) + ")")
+							.style("left", (d3.event.pageX + 10) + "px")
+							.style("top", (d3.event.pageY - 28) + "px");
+				})
+				.on("mouseout", function(d) {
+					tooltip.transition()
+							.duration(500)
+							.style("opacity", 0);
+				});
+			// Draw legend
+			
+			var legend = svg.selectAll(".legend")
+							.data(color.domain())
+							.enter().append("g")
+								.attr("class", "legend")
+								.attr("transform", function(d, i) { return "translate(10," + (i+7) * 20 + ")"; });
+			// Draw legend colored rectangles
+			legend.append("rect")
+					.attr("x", width - 18)
+					.attr("width", 18)
+					.attr("height", 18)
+					.style("fill", color);
+			// Draw legend text
+			legend.append("text")
+					.attr("x", width - 24)
+					.attr("y", 9)
+					.attr("dy", ".35em")
+					.style("text-anchor", "end")
+					.text(function(d) { return d;})
+					
+			var clickedGroup;
+					
+			legend.on("click", function(d){ 
+			
+			
+											
+											lerect = this;
+											
+											var remGrp;
+											clickedGroup = d3.select(this).text();
+											
+											textt = d3.select("#" + clickedGroup).text();
+											
+											remGrp = color.domain().filter(function(d, i) { if (d != clickedGroup ) return d;})
+											
+											//console.log(remGrp);
+											
+											scat.transition().duration(1000).style("opacity",function(d) { var returnval;
+																											if(d.Group == clickedGroup) 
+																											{
+																												if(textt == 1){
+																												d3.select("#" + clickedGroup).text("0");
+																												d3.select(lerect).style("opacity", function(d) { return .5;});
+																												returnval = 0;}
+																												
+																												else{
+																												d3.select("#" + clickedGroup).text("1");
+																												d3.select(lerect).style("opacity", function(d) { return 1;});
+																												returnval = 1;}
+																												
+																												return returnval;
+																											}
+																											
+																											else
+																											{
+																											
+																											for (var i =0; i < remGrp.length; i++)
+																											//console.log(remGrp[i]);
+																											
+																											if(d.Group == remGrp[i])
+																											{
+																											//console.log(d.Group);
+																											text2 = d3.select("#" + d.Group).text();
+																											//console.log(text2);
+																											if(text2 == 1){ return 1;}
+																											else return 0;
+																											
+																											}
+																												
+																											}
+																											
+																										});
+																										
+										  });
+			
+			
+		});
+    </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+  <title>Visualization 4</title>
+    
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  </head>
+ 
+    
+    <style type="text/css">
+            /* Format X and Y Axis */
+            .axis path,
+            .axis line {
+                fill: none;
+                stroke: black;
+                shape-rendering: crispEdges;
+            }
+
+            .axis text {
+                font-family: sans-serif;
+                font-size: 11px;
+            }
+    </style>
+    
+ 
+  <body>
+    <h2>4. Identity as spatial region </h2>
+    <p>This is a data visualization using transitions with a scatterplot</p>
+	<p>This is to demonstrate Identity as a spatial region. We can take X-Axis as Passing yards and Y-Axis as rushing yards. Size of the circle will represent the identity of Conference (i.e passing yards of players who participated in that Conference)</p>
+	<p>Marks - points, Channel - Area, Channel Types - Identity</p>
+    <p>Discriminability can be observed by area of circles, by the size we can get to know about the Conference</p>
+	<p>For transition. I generated random numbers for Passing Yards and Rushing yards</p>
+	<p><b>MouseOver for tooltips</b></p>
+    <h4>Click on this text to update chart with new values</h4>
+    <h3></h3>
+  
+  
+  <script type="text/javascript">
+  
+    
+            var dataset = []; 
+            var numDataPoints = 15;
+            var maxRange = Math.random() * 1000;
+            for(var i=0; i<numDataPoints; i++) {
+                var newNumber1 = Math.floor(Math.random() * maxRange);  
+                var newNumber2 = Math.floor(Math.random() * maxRange);  
+                dataset.push([newNumber1, newNumber2]);  
+            }
+
+            // Setup settings for graphic
+            var canvas_width = 1000;
+            var canvas_height = 600;
+            var padding = 30;  // for chart edges
+
+            // Create scale functions
+            var xScale = d3.scale.linear()  // xScale is width of graphic
+                            .domain([0, d3.max(dataset, function(d) {
+                                return d[0];  // input domain
+                            })])
+                            .range([padding, canvas_width - padding * 2]); // output range
+
+            var yScale = d3.scale.linear()  // yScale is height of graphic
+                            .domain([0, d3.max(dataset, function(d) {
+                                return d[1];  // input domain
+                            })])
+                            .range([canvas_height - padding, padding]);  // remember y starts on top going down so we flip
+							
+			var rScale = d3.scale.linear()
+						   .domain([0, d3.max(dataset, function(d) { return d[1]; })])
+                           .range([2, 5]);
+
+            // Define X axis
+            var xAxis = d3.svg.axis()
+                            .scale(xScale)
+                            .orient("bottom")
+                            .ticks(5);
+
+            // Define Y axis
+            var yAxis = d3.svg.axis()
+                            .scale(yScale)
+                            .orient("left")
+                            .ticks(5);
+
+            // Create SVG element
+            var svg = d3.select("h3")  // This is where we put our vis
+                .append("svg")
+                .attr("width", canvas_width)
+                .attr("height", canvas_height)
+
+            // Create Circles
+            var scat = svg.selectAll("circle")
+                .data(dataset)
+                .enter()
+                .append("circle")  // Add circle svg
+                .attr("cx", function(d) {
+                    return xScale(d[0]);  // Circle's X
+                })
+                .attr("cy", function(d) {  // Circle's Y
+                    return yScale(d[1]);
+                })
+                .attr("r", function(d) {return rScale(d[1]);});  // radius
+
+            // Add to X axis
+            svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + (canvas_height - padding) +")")
+                .call(xAxis);
+
+            // Add to Y axis
+            svg.append("g")
+                .attr("class", "y axis")
+                .attr("transform", "translate(" + padding +",0)")
+                .call(yAxis);
+				
+						scat.on("mouseover", function(d) {
+									svg.append("text")
+									   .attr("id","tooltip")
+									   .attr("x", xScale(d[0]))
+									   .attr("y", yScale(d[1]) - 6)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text(d[0] + "," + d[1]);
+									   })
+									   
+			scat.on("mouseout", function() {d3.select("#tooltip").remove()})
+			
+			var svg1 = d3.select("h3")
+                .append("svg")
+                .attr("width", 100)
+                .attr("height", 150);
+			
+			var legend = svg1.append("g")
+							.attr("class","append")
+							.attr("transform","translate(" + 20 + "," + 20 + ")")
+							.selectAll("g")
+							.data(["Conf-1", "Conf-2", "Conf-3", "Conf-4"])
+							.enter()
+							.append("g")
+							
+			legend.append("circle")
+				  .attr("cy", function(d, i) { return i * 30; })
+				  .attr("r", function(d) {
+									if(d == "Conf-1") return 5;
+									else if(d =="Conf-2") return 4;
+									else if(d =="Conf-3") return 3;
+									else return 2;
+										})
+				  .attr("fill", "black");
+			
+			legend.append("text")
+				  .attr("y", function(d,i) { return i * 30 + 5; })
+				  .attr("x", i)
+				  .attr("font-size", "16px")
+				  .text(function(d) { return d;});
+				
+
+							
+            // On click, update with new data
+            d3.select("h4")
+                .on("click", function() {
+                    var numValues = dataset.length;  // Get original dataset's length
+                    var maxRange = Math.random() * 1000;  // Get max range of new values
+                    dataset = [];  // Initialize empty array
+                    for(var i=0; i<numValues; i++) {
+                        var newNumber1 = Math.floor(Math.random() * maxRange);  // Random int for x
+                        var newNumber2 = Math.floor(Math.random() * maxRange);  // Random int for y
+                        dataset.push([newNumber1, newNumber2]);  // Add new numbers to array
+                    }
+
+                    // Update scale domains
+                    xScale.domain([0, d3.max(dataset, function(d) {
+                        return d[0]; })]);
+                    yScale.domain([0, d3.max(dataset, function(d) {
+                        return d[1]; })]);
+					rScale.domain([0, d3.max(dataset, function(d) {
+                        return d[1]; })]);
+
+                    // Update circles
+                    svg.selectAll("circle")
+                        .data(dataset)  // Update with new data
+                        .transition()  // Transition from old to new
+                        .duration(1000)  // Length of animation
+                        .each("start", function() {  // Start animation
+                            d3.select(this)  // 'this' means the current element
+                                .attr("fill", "red")  // Change color
+                                .attr("r", 5);  // Change size
+                        })
+                        .delay(function(d, i) {
+                            return i / dataset.length * 500;  // Dynamic delay (i.e. each item delays a little longer)
+                        })
+                        //.ease("linear")  // Transition easing - default 'variable' (i.e. has acceleration), also: 'circle', 'elastic', 'bounce', 'linear'
+                        .attr("cx", function(d) {
+                            return xScale(d[0]);  // Circle's X
+                        })
+                        .attr("cy", function(d) {
+                            return yScale(d[1]);  // Circle's Y
+                        })
+                        .each("end", function() {  // End animation
+                            d3.select(this)  // 'this' means the current element
+                                .transition()
+                                .duration(500)
+                                .attr("fill", "black")  // Change color
+                                .attr("r", function(d) {return rScale(d[1]);});   // Change radius
+                        });
+
+                        // Update X Axis
+                        svg.select(".x.axis")
+                            .transition()
+                            .duration(1000)
+                            .call(xAxis);
+
+                        // Update Y Axis
+                        svg.select(".y.axis")
+                            .transition()
+                            .duration(100)
+                            .call(yAxis);
+                });
+			
+  </script>
+  </body>
+</html>

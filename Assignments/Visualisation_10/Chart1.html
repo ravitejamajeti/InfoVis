@@ -1,0 +1,402 @@
+
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ODU Student Demographics Project - Prototype</title>
+<style>	
+body { 
+  color: #666; 
+  background: #f3f3f3; 
+  font: normal 10px "Helvetica Neue", Helvetica, sans-serif; 
+  margin: 2em; 
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+
+.line {
+  fill: none;
+  stroke: #377eb8;
+  stroke-width: 1.5px;
+}
+
+.line1 {
+  fill: none;
+  stroke: #4daf4a;
+  stroke-width: 1.5px;
+}
+
+.line2 {
+  fill: none;
+  stroke: #e41a1c;
+  stroke-width: 1.5px;
+}
+
+.Exp {
+  font: normal 13px "Helvetica Neue", Helvetica, sans-serif;
+}
+
+</style>
+<body>
+<h2>Superimposing and Linked Highlighting</h2>
+<p class="Exp"><b>Explanation : </b>I thought of representing the count of Men, Women and Total Participants count from Olympics dataset over the years. As line charts would be the better idea for represnting data over time. I designed individual line charts for count of Men, Women and Total Participants. Then i used superimposing technique to merge all the lines in a single chart.</p>
+<p class="Exp">Also i have used Linked Highlighting technique, where as when the user hover on a dot on the line chart, All the dots for that particular year in the different lines will be highlighted as well. You can also observe the text below the chart displaying exact count of all the 3 dots. I displayed this exact count because in the early years of the line chart it is really difficult to differentiate between dots of Men and Total Participants, as they hide behind each other</p>
+<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<script>
+			var marginMaj = {top: 20, right: 20, bottom: 70, left: 40},
+			widthMaj = 600 - marginMaj.left - marginMaj.right,
+			heightMaj = 300 - marginMaj.top - marginMaj.bottom;
+
+			var svgMaj = d3.select("body").append("svg").attr("id", "ID1")
+						   .attr("width", widthMaj + marginMaj.left + marginMaj.right + 200)
+						   .attr("height", heightMaj + marginMaj.top + marginMaj.bottom)
+					       .append("g")
+						   .attr("transform", "translate(" + marginMaj.left + "," + marginMaj.top + ")");
+	
+
+// Set the dimensions of the canvas / graph
+var margin = {top: 30, right: 20, bottom: 30, left: 40},
+    width = 600 - margin.left - margin.right,
+    height = 270 - margin.top - margin.bottom;
+
+// Parse the date / time
+var parseDate = d3.time.format("%Y").parse,
+    formatDate = d3.time.format("%Y"),
+    bisectDate = d3.bisector(function(d) { return d.Year; }).left;
+
+// Set the ranges
+var x = d3.time.scale().range([0, width]);
+var y = d3.scale.linear().range([height, 0]);
+
+// Define the axes
+var xAxis = d3.svg.axis().scale(x)
+    .orient("bottom").ticks(5);
+
+var yAxis = d3.svg.axis().scale(y)
+    .orient("left").ticks(5);
+
+// Define the line
+var valueline = d3.svg.line()
+    .x(function(d) { return x(d.Year); })
+    .y(function(d) { return y(d.Men); });
+	
+var valueline1 = d3.svg.line()
+    .x(function(d) { return x(d.Year); })
+    .y(function(d) { return y(d.Women); });
+	
+var valueline2 = d3.svg.line()
+    .x(function(d) { return x(d.Year); })
+    .y(function(d) { return y(d.Participants); });
+    
+
+var lineSvg = svgMaj.append("g"); 
+
+var lineSvg1 = svgMaj.append("g"); 
+
+var lineSvg2 = svgMaj.append("g");
+
+
+// Get the data
+d3.csv("olympics-data.csv", function(error, data) {
+    data.forEach(function(d) {
+        d.Year = parseDate(d.Year);
+        d.Men = +d.Men;
+		d.Women = +d.Women;
+		d.Participants = +d.Participants;
+		d.Sports = +d.Sports;
+		d.Events = +d.Events;
+    });
+
+    // Scale the range of the data
+    x.domain(d3.extent(data, function(d) { return d.Year; }));
+    y.domain([0, d3.max(data, function(d) { return d.Participants; })]);
+
+    // Add the valueline path.
+    lineSvg.append("path")
+        .attr("class", "line")
+        .attr("d", valueline(data[0].Men))
+		.transition()
+		.duration(1000)
+		.attrTween('d', pathTween);
+		
+	function pathTween() {
+        var interpolate = d3.scale.quantile()
+                .domain([0,1])
+                .range(d3.range(1, data.length + 1));
+        return function(t) {
+            return valueline(data.slice(0, interpolate(t)));
+        };
+    }
+	
+	 lineSvg1.append("path")
+        .attr("class", "line1")
+        .attr("d", valueline1(data[0].Women))
+		.transition()
+		.duration(1000)
+		.attrTween('d', pathTween1);
+		
+	function pathTween1() {
+        var interpolate = d3.scale.quantile()
+                .domain([0,1])
+                .range(d3.range(1, data.length + 1));
+        return function(t) {
+            return valueline1(data.slice(0, interpolate(t)));
+        };
+    }
+	
+	lineSvg2.append("path")
+        .attr("class", "line2")
+        .attr("d", valueline1(data[0].Participants))
+		.transition()
+		.duration(1000)
+		.attrTween('d', pathTween2);
+		
+	function pathTween2() {
+        var interpolate = d3.scale.quantile()
+                .domain([0,1])
+                .range(d3.range(1, data.length + 1));
+        return function(t) {
+            return valueline2(data.slice(0, interpolate(t)));
+        };
+    }
+	
+            var scat = svgMaj.selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")  // Add circle svg
+                .attr("cx", function(d) {
+                    return x(d.Year);  // Circle's X
+                })
+                .attr("cy", function(d) {  // Circle's Y
+                    return y(d.Men);
+                })
+                .attr("r", 3);  // radius
+				
+				
+									scat.on("mouseover", function(d) {
+									
+									svgMaj.append("text")
+									   .attr("id","tooltip")
+									   .attr("x", 0)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Year - " + d.Year.getFullYear() + "--" + "Men : Count - " + d.Men + " , ");
+									
+									svgMaj.append("text")
+									   .attr("id","tooltip1")
+									   .attr("x", 170)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Women : Count - " + d.Women + " , ");
+									   
+									svgMaj.append("text")
+									   .attr("id","tooltip2")
+									   .attr("x", 290)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Total Participants : Count - "  + d.Participants);
+									   
+									   var yr = d.Year
+									   
+									   console.log(yr)
+									   console.log(d.Year)
+									scat.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });   
+									scat1.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });
+									scat2.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });
+									   })
+									   
+			scat.on("mouseout", function() {
+			d3.select("#tooltip").remove();
+			d3.select("#tooltip1").remove();
+			d3.select("#tooltip2").remove();
+			scat.attr("r", 3);
+			scat1.attr("r", 3);
+			scat2.attr("r", 3);
+			})
+			
+			
+			   var scat1 = svgMaj.selectAll("circle1")
+                .data(data)
+                .enter()
+                .append("circle")  // Add circle svg
+                .attr("cx", function(d) {
+                    return x(d.Year);  // Circle's X
+                })
+                .attr("cy", function(d) {  // Circle's Y
+                    return y(d.Women);
+                })
+                .attr("r", 3);  // radius
+				
+				
+									scat1.on("mouseover", function(d) {
+									
+									svgMaj.append("text")
+									   .attr("id","tooltip")
+									   .attr("x", 0)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Year - " + d.Year.getFullYear() + "--" + "Men : Count - " + d.Men + " , ");
+									
+									svgMaj.append("text")
+									   .attr("id","tooltip1")
+									   .attr("x", 170)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Women : Count - " + d.Women + " , ");
+									   
+									svgMaj.append("text")
+									   .attr("id","tooltip2")
+									   .attr("x", 290)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Total Participants : Count - "  + d.Participants);
+									   
+									   var yr = d.Year
+									   
+									   console.log(yr)
+									   console.log(d.Year)
+									scat.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });   
+									scat1.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });
+									scat2.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });
+									   })
+									   
+			scat1.on("mouseout", function() {
+			d3.select("#tooltip").remove();
+			d3.select("#tooltip1").remove();
+			d3.select("#tooltip2").remove();
+			scat.attr("r", 3);
+			scat1.attr("r", 3);
+			scat2.attr("r", 3);
+			})
+			
+			
+					   var scat2 = svgMaj.selectAll("circle2")
+                .data(data)
+                .enter()
+                .append("circle")  // Add circle svg
+                .attr("cx", function(d) {
+                    return x(d.Year);  // Circle's X
+                })
+                .attr("cy", function(d) {  // Circle's Y
+                    return y(d.Participants);
+                })
+                .attr("r", 3);  // radius
+				
+				
+									scat2.on("mouseover", function(d) {
+									
+									svgMaj.append("text")
+									   .attr("id","tooltip")
+									   .attr("x", 0)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Year - " + d.Year.getFullYear() + "--" + "Men : Count - " + d.Men + " , ");
+									
+									svgMaj.append("text")
+									   .attr("id","tooltip1")
+									   .attr("x", 170)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Women : Count - " + d.Women + " , ");
+									   
+									svgMaj.append("text")
+									   .attr("id","tooltip2")
+									   .attr("x", 290)
+									   .attr("y", heightMaj + marginMaj.bottom)
+									   .attr("font-family", "sans-serif")
+									   .attr("font-size", "11px")
+									   .attr("font-weight", "bold")
+									   .attr("fill", "red")
+									   .text("Total Participants : Count - "  + d.Participants);
+									   
+									   var yr = d.Year
+									   
+									   console.log(yr)
+									   console.log(d.Year)
+									scat.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });   
+									scat1.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });
+									scat2.attr("r", function(d) { if(d.Year == yr) { return 5;} else { return 3; } });
+									   })
+									   
+			scat2.on("mouseout", function() {
+			d3.select("#tooltip").remove();
+			d3.select("#tooltip1").remove();
+			d3.select("#tooltip2").remove();
+			scat.attr("r", 3);
+			scat1.attr("r", 3);
+			scat2.attr("r", 3);
+			})
+		
+
+    // Add the X Axis
+    svgMaj.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    // Add the Y Axis
+    svgMaj.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+		
+		color = ['#e41a1c','#377eb8','#4daf4a'];
+		
+	var legend = svgMaj.selectAll(".legend")
+      .data(["Participants", "Men", "Women"])
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(10," + (i+7) * 20 + ")"; });
+
+  // draw legend colored rectangles
+  legend.append("rect")
+      .attr("x", width - 18)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", function(d) {
+							if(d == "Participants") return color[0];
+							else if(d =="Men") return color[1];
+							else return color[2]; });
+
+  // draw legend text
+  legend.append("text")
+      .attr("x", width - 24)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d;})
+	  
+	  
+	  
+     
+ });
+</script>
+
+</body>

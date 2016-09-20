@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Visualization 5 - Side by Side</title>
+        <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    </head>
+	
+	<style>
+
+	.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+	</style>
+	
+    <body>	
+	<h2> Eyes Beat Memory : Animation VS Side by Side</h2>
+	<h3>Using Side by Side Views to compare both data</h3>
+	<p><b>This charts presents the details about the HeadCount of students per major in years 2007 and 2008. </b></p>
+	<p><b>X-Axis - Major, Y-Axis - Head Count of Students, On the top left of Y-Axis - You can observe year for which you are checking statistics</b></p>
+
+        <script type="text/javascript">
+	
+	
+
+			var dataset = [["a",5],["b",7],["c",9],["d",3],["e",16],["f",13],["g",19],["h",20],["i",5],["j",7],["k",9],["l",3],["m",16],["n",13],["o",19],["p",20]];		// creating array named dataset
+			
+			var margin = {top: 20, right: 20, bottom: 30, left: 40},
+					width = 760 - margin.left - margin.right,
+					height = 400 - margin.top - margin.bottom;
+	
+			var svg1 = d3.select("body").append("svg")
+						.attr("width", width + margin.left + margin.right)
+						.attr("height", height + margin.top + margin.bottom)
+						.append("g")
+						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			
+			var x = d3.scale.ordinal()
+					  .rangeRoundBands([0, width], .1);
+			
+			var y = d3.scale.linear()
+					  .range([height, 0]);
+					  
+			var xAxis = d3.svg.axis()
+						  .scale(x)
+						  .orient("bottom");
+
+			var yAxis = d3.svg.axis()
+						  .scale(y)
+						  .orient("left")
+						  .ticks(10);
+						  
+			x.domain(dataset.map(function(d) { return d[0]; }));
+			y.domain([0, d3.max(dataset, function(d) { return d[1]; })]);
+
+			 var rect = svg1.selectAll("rect")
+						   .data(dataset)
+						   .enter()
+						   .append("rect")
+						   .attr("x", function(d) { return x(d[0]); })
+						   .attr("width", x.rangeBand())
+						   .attr('y', height)
+						   .attr('height', 0)
+						   .attr("fill", "green")
+						   .attr("stroke","black")
+						   .attr("stroke-width", 2);
+			
+			rect.transition()
+				.attr("height", function(d) { return height - y(d[1]); })
+				.attr("y", function(d) { return y(d[1]); })
+				.delay(function(d, i) { return i * 20; })
+				.duration(1000)
+				.ease("elastic");
+				
+			 var text = svg1.selectAll("text")
+						   .data(dataset)
+						   .enter()
+						   .append("text")
+						   .text(function(d) { return d[1]; })
+						   .attr("x", function(d) { return x(d[0]) + x.rangeBand()/2; })
+						   .attr("y", function(d) { return y(d[1]) + 13; })
+						   .attr("font-size", "15px")
+						   .attr("fill", "black");
+						   
+			svg1.append("g")
+			   .attr("class", "x axis")
+			   .attr("transform", "translate(0," + height + ")")
+			   .call(xAxis);
+
+			svg1.append("g")
+			   .attr("class", "y axis")
+			   .call(yAxis)
+			   .append("text")
+			   .attr("transform", "rotate(-90)")
+			   .attr("y", 6)
+               .attr("dy", ".71em")
+			   .style("text-anchor", "end")
+			   .text("2007");
+			   
+			   
+			   		
+			   
+			   						   
+        </script>
+		       <script type="text/javascript">
+	
+	
+
+			dataset = [["a",9],["b",5],["c",7],["d",9],["e",11],["f",16],["g",15],["h",5],["i",10],["j",12],["k",11],["l",6],["m",35],["n",10],["o",9],["p",10]];		// creating array named dataset
+			
+			var margin = {top: 20, right: 20, bottom: 30, left: 40},
+					width = 760 - margin.left - margin.right,
+					height = 400 - margin.top - margin.bottom;
+	
+			var svg = d3.select("body").append("svg")
+						.attr("width", width + margin.left + margin.right)
+						.attr("height", height + margin.top + margin.bottom)
+						.append("g")
+						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			
+			var x = d3.scale.ordinal()
+					  .rangeRoundBands([0, width], .1);
+			
+			var y = d3.scale.linear()
+					  .range([height, 0]);
+					  
+			var xAxis = d3.svg.axis()
+						  .scale(x)
+						  .orient("bottom");
+
+			var yAxis = d3.svg.axis()
+						  .scale(y)
+						  .orient("left")
+						  .ticks(10);
+						  
+			x.domain(dataset.map(function(d) { return d[0]; }));
+			y.domain([0, d3.max(dataset, function(d) { return d[1]; })]);
+
+			 var rect = svg.selectAll("rect")
+						   .data(dataset)
+						   .enter()
+						   .append("rect")
+						   .attr("x", function(d) { return x(d[0]); })
+						   .attr("width", x.rangeBand())
+						   .attr('y', height)
+						   .attr('height', 0)
+						   .attr("fill", "orange")
+						   .attr("stroke","black")
+						   .attr("stroke-width", 2);
+			
+			rect.transition()
+				.attr("height", function(d) { return height - y(d[1]); })
+				.attr("y", function(d) { return y(d[1]); })
+				.delay(function(d, i) { return i * 20; })
+				.duration(1000)
+				.ease("elastic");
+				
+				
+							 var text = svg.selectAll("text")
+						   .data(dataset)
+						   .enter()
+						   .append("text")
+						   .text(function(d) { return d[1]; })
+						   .attr("x", function(d) { return x(d[0]) + x.rangeBand()/2; })
+						   .attr("y", function(d) { return y(d[1]) + 10 + 3; })
+						   .attr("font-size", "15px")
+						   .attr("fill", "black");
+						   
+			svg.append("g")
+			   .attr("class", "x axis")
+			   .attr("transform", "translate(0," + height + ")")
+			   .call(xAxis);
+
+			svg.append("g")
+			   .attr("class", "y axis")
+			   .call(yAxis)
+			   .append("text")
+			   .attr("transform", "rotate(-90)")
+			   .attr("y", 6)
+               .attr("dy", ".71em")
+			   .style("text-anchor", "end")
+			   .text("2008");
+			 			   						   
+        </script>
+		
+		<p>By checking the above graphs now we are able to compare the statistics about the major's in both years easily. This is better than animation because there is no need to memorize any of the statistics to compare it with another</p>
+		
+		<p>Got a comment for some other user of gist.github.com saying why not keep same years in same chart, so that we can compare from same chart without looking over different charts.
+		I included my reply below explaining why i did not keep both the years in same chart.</p>
+		
+		<p>"Yes, for small amounts of data like this we can implement it in same chart (Possibly using another chart instead of bar chart). But when there is enormous amount of data the chart may become clumsy and it might be difficult for user to find out specific data that he/she needs from chart. Again we can overcome this by including filters for chart, so that user can apply appropriate filters and keep only necessary data in chart. Also using this filters serves good only for some types of charts. For some type of charts which includes area to measure magnitude instead of position even if we apply filters, keeping 2 years in same chart will make chart clumsy and useless. So side by side charts will serve good in most of the cases. We can include a functionality from which user can generate only necessary graphs, keep them side by side and compare them.
+		But my idea is to demonstrate the situation in which using animation is not a good idea."
+		</p>
+    </body>
+</html>
